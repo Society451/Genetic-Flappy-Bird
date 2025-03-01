@@ -78,6 +78,11 @@ class SettingsPanel:
         self.save_button = Button(self.x + 20, 50, 160, 40, "Save Population")
         self.load_button = Button(self.x + 20, 100, 160, 40, "Load Population")
         self.mutation_slider = Slider(self.x + 20, 180, 160, 20, 0.01, 0.5, self.genetic_algorithm.mutation_rate, "Mutation Rate")
+        self.speed_slider = Slider(self.x + 20, 240, 160, 20, 1, 100, self.genetic_algorithm.game.speed, "Game Speed")
+        
+        # Toggle for vector visualization
+        self.show_vectors_button = Button(self.x + 20, 300, 160, 40, "Toggle Vectors")
+        self.genetic_algorithm.game.show_vectors = False
         
     def draw(self, screen):
         # Draw panel background
@@ -92,6 +97,8 @@ class SettingsPanel:
         self.save_button.draw(screen)
         self.load_button.draw(screen)
         self.mutation_slider.draw(screen)
+        self.speed_slider.draw(screen)
+        self.show_vectors_button.draw(screen)
         
     def handle_event(self, event):
         mouse_pos = pygame.mouse.get_pos()
@@ -99,11 +106,17 @@ class SettingsPanel:
         # Update button hover states
         self.save_button.check_hover(mouse_pos)
         self.load_button.check_hover(mouse_pos)
+        self.show_vectors_button.check_hover(mouse_pos)
         
         # Handle slider events
         self.mutation_slider.handle_event(event)
+        self.speed_slider.handle_event(event)
+        
         if self.mutation_slider.update(mouse_pos):
             self.genetic_algorithm.mutation_rate = self.mutation_slider.value
+            
+        if self.speed_slider.update(mouse_pos):
+            self.genetic_algorithm.game.speed = int(self.speed_slider.value)
         
         # Handle button clicks
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -119,3 +132,7 @@ class SettingsPanel:
                     print("Population loaded")
                 except:
                     print("No saved population found")
+                    
+            if self.show_vectors_button.is_clicked(mouse_pos, True):
+                self.genetic_algorithm.game.show_vectors = not self.genetic_algorithm.game.show_vectors
+                self.show_vectors_button.text = "Hide Vectors" if self.genetic_algorithm.game.show_vectors else "Show Vectors"

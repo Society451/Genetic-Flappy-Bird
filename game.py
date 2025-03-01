@@ -1,5 +1,6 @@
 import pygame
 import random
+import time
 from bird import Bird
 from pipe import Pipe
 from config import GAME_WIDTH, SCREEN_WIDTH, SCREEN_HEIGHT, PIPE_GAP, PIPE_FREQUENCY, BIRD_COUNT
@@ -14,8 +15,23 @@ class Game:
         self.frame_counter = 0
         self.font = pygame.font.SysFont('Arial', 25)
         self.bg_color = (135, 206, 250)  # Light blue
+        
+        # For smoother animation
+        self.last_time = time.time()
+        self.delta_time = 0
+        
+        # For vector visualization
+        self.show_vectors = False
     
     def update(self):
+        # Calculate delta time for smoother animation
+        current_time = time.time()
+        self.delta_time = (current_time - self.last_time) * 60  # Convert to frames equivalent
+        self.last_time = current_time
+        
+        # Make sure delta_time is reasonable (preventing large jumps if game is paused or lagging)
+        self.delta_time = min(self.delta_time, 3.0)
+        
         # Add new pipe periodically
         if self.frame_counter % PIPE_FREQUENCY == 0:
             gap_y = random.randint(100, SCREEN_HEIGHT - 100 - PIPE_GAP)
@@ -23,9 +39,9 @@ class Game:
         
         # Update all game objects
         for _ in range(self.speed):
-            # Update pipes
+            # Update pipes with delta time
             for pipe in self.pipes:
-                pipe.update()
+                pipe.update(self.delta_time / self.speed)
             
             # Remove pipes that have gone off screen
             self.pipes = [pipe for pipe in self.pipes if pipe.x > -pipe.width]
@@ -48,7 +64,7 @@ class Game:
                         if bird.think(inputs) > 0.5:
                             bird.jump()
                     
-                    bird.update()
+                    bird.update(self.delta_time / self.speed)
                     
                     # Check for collisions
                     if self.check_collision(bird):
@@ -73,10 +89,32 @@ class Game:
         for pipe in self.pipes:
             pipe.draw(self.screen)
         
-        # Draw birds
+        # Draw birds and vectors
         for bird in self.birds:
             if bird.alive:
                 bird.draw(self.screen)
+                
+                # Draw vectors if enabled
+                if self.show_vectors:
+                    closest_pipe = self.get_closest_pipe(bird)
+                    if closest_pipe:
+                        # Vector to top of closest pipe gap
+                        pygame.draw.line(self.screen, (255, 0, 0), 
+                                        (bird.x + bird.width/2, bird.y + bird.height/2),
+                                        (closest_pipe.x, closest_pipe.gap_y),
+                                        2)
+                        
+                        # Vector to bottom of closest pipe gap
+                        pygame.draw.line(self.screen, (0, 0, 255),
+                                        (bird.x + bird.width/2, bird.y + bird.height/2),
+                                        (closest_pipe.x, closest_pipe.gap_y + PIPE_GAP),
+                                        2)
+                                        
+                        # Vector to horizontal distance
+                        pygame.draw.line(self.screen, (0, 255, 0),
+                                        (bird.x + bird.width/2, bird.y + bird.height/2),
+                                        (closest_pipe.x, bird.y + bird.height/2),
+                                        2)
         
         # Draw score and info
         score_text = self.font.render(f'Score: {self.score}', True, (0, 0, 0))

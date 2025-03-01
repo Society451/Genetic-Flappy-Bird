@@ -10,8 +10,8 @@ class Pipe:
         self.color = (0, 128, 0)  # Green
         self.passed = False
     
-    def update(self):
-        self.x -= self.speed
+    def update(self, delta_time=1.0):
+        self.x -= self.speed * delta_time
     
     def draw(self, screen):
         # Draw top pipe

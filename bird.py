@@ -23,10 +23,10 @@ class Bird:
             # Neural network with 4 inputs, 6 hidden neurons, and 1 output
             self.brain = NeuralNetwork([4, 6, 1])
     
-    def update(self):
-        # Apply gravity
-        self.velocity += self.gravity
-        self.y += self.velocity
+    def update(self, delta_time=1.0):
+        # Apply gravity with delta time
+        self.velocity += self.gravity * delta_time
+        self.y += self.velocity * delta_time
     
     def jump(self):
         self.velocity = self.jump_force
